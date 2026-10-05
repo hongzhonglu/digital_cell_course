@@ -1,0 +1,55 @@
+seed.rxn.id	enzyme.name
+rxn90011	2-keto-3-deoxy-L-fuconate dehydrogenase
+rxn90012	2,4-diketo-3-deoxy-l-fuconate hydrolase
+rxn01273	4-trimethylaminobutyraldehyde dehydrogenase
+rxn01297	purine hydroxylase
+rxn25797	dimethylsulfoxide reductase
+rxn15942	diacylglycerol 3-amino-3-carboxypropyl transferase
+rxn07292	cysteine desulfurase
+rxn05229	1-(5-phosphoribosyl)-5-amino-4-imidazole-carboxylate carboxylase
+rxn90003	2-FL ABC transport
+rxn41718	coproheme III oxidative decarboxylase
+rxn11877	D-galactosamine-6-phosphate deaminase/isomerase
+rxn14056	N-acetylgalactosamine kinase
+rxn00875	Butyryl-CoA:acetate CoA-transferase
+rxn90025	N-acetylgalactosamine kinase
+rxn24594	D-glyceraldehyde-3-phosphate phospholyase
+rxn20828	RXN-10054
+rxn44185	6-hydroxymethyl-7,8-dihydropterin 7,9-dimethyltransferase
+rxn46469	4-(beta-D-ribofuranosyl)-N-succinylaminobenzene 5'-phosphate lyase
+rxn44206	4-(beta-D-ribofuranosyl)hydroxybenzene 5'-phosphate--L-aspartate ligase
+rxn45700	RXN-10010
+rxn90048	RXN-10011
+rxn90049	RXN-10012
+rxn90050	RXN-10013
+rxn42782	RXN-10014
+rxn90053	Na(+)-translocating ferredoxin:NAD(+) oxidoreductase complex
+rxn90067	2-keto-3-deoxyfuconate aldolase
+rxn22164	dye-decolorizing peroxidase
+rxn05938	pyruvate:ferredoxin oxidoreductase
+rxn16141	RXN-11002
+rxn90091	R247-RXN
+rxn09174	propionyl-CoA:succinate CoA transferase
+rxn15539	methylmalonyl-CoA decarboxylase
+rxn07622	dihydrophloroglucinol hydrolase
+rxn07624	3-hydroxy-5-oxohexanoyl-CoA thiolase
+rxn22013	daidzein reductase
+rxn90105	daidzein reductase
+rxn23386	dihydrodaidzein reductase
+rxn23387	tetrahydrodaidzein dehydratase
+rxn23867	RXN-3591
+rxn13772	anhydromevalonate phosphate decarboxylase
+rxn90109	phosphomevalonate dehydratase
+rxn02374	SPONTPRO-RXN
+rxn02890	3alpha-hydroxysteroid dehydrogenase
+rxn45097	3alpha-hydroxysteroid dehydrogenase
+rxn23106	3alpha-hydroxysteroid dehydrogenase
+rxn44816	3alpha-hydroxysteroid dehydrogenase
+rxn41954	3beta-hydroxysteroid dehydrogenase
+rxn42927	3beta-hydroxysteroid dehydrogenase
+rxn42689	3beta-hydroxysteroid dehydrogenase
+rxn48035	3beta-hydroxysteroid dehydrogenase
+rxn03097	R107-RXN
+rxn21189	protocatechuate 2,3-dioxygenase
+rxn21190	5-carboxy-2-hydroxymuconate-6-semialdehyde decarboxylase
+rxn29776	Inuline ABC-Transporter
