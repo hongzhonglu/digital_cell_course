@@ -1,0 +1,73 @@
+﻿metabolite_id,metabolite_name,formula,compartment
+glc__D_e,D-Glucose,C6H12O6,e
+gln__L_c,L-Glutamine,C5H10N2O3,c
+gln__L_e,L-Glutamine,C5H10N2O3,e
+glu__L_c,L-Glutamate,C5H8NO4,c
+glu__L_e,L-Glutamate,C5H8NO4,e
+glx_c,Glyoxylate,C2H1O3,c
+h2o_c,H2O H2O,H2O,c
+h2o_e,H2O H2O,H2O,e
+h_c,H+,H,c
+h_e,H+,H,e
+icit_c,Isocitrate,C6H5O7,c
+lac__D_c,D-Lactate,C3H5O3,c
+lac__D_e,D-Lactate,C3H5O3,e
+mal__L_c,L-Malate,C4H4O5,c
+mal__L_e,L-Malate,C4H4O5,e
+nad_c,Nicotinamide adenine dinucleotide,C21H26N7O14P2,c
+nadh_c,Nicotinamide adenine dinucleotide - reduced,C21H27N7O14P2,c
+nadp_c,Nicotinamide adenine dinucleotide phosphate,C21H25N7O17P3,c
+nadph_c,Nicotinamide adenine dinucleotide phosphate - reduced,C21H26N7O17P3,c
+nh4_c,Ammonium,H4N,c
+13dpg_c,3-Phospho-D-glyceroyl phosphate,C3H4O10P2,c
+nh4_e,Ammonium,H4N,e
+o2_c,O2 O2,O2,c
+2pg_c,D-Glycerate 2-phosphate,C3H4O7P,c
+o2_e,O2 O2,O2,e
+3pg_c,3-Phospho-D-glycerate,C3H4O7P,c
+oaa_c,Oxaloacetate,C4H2O5,c
+pep_c,Phosphoenolpyruvate,C3H2O6P,c
+6pgc_c,6-Phospho-D-gluconate,C6H10O10P,c
+pi_c,Phosphate,HO4P,c
+6pgl_c,"6-phospho-D-glucono-1,5-lactone",C6H9O9P,c
+pi_e,Phosphate,HO4P,e
+ac_c,Acetate,C2H3O2,c
+pyr_c,Pyruvate,C3H3O3,c
+pyr_e,Pyruvate,C3H3O3,e
+q8_c,Ubiquinone-8,C49H74O4,c
+q8h2_c,Ubiquinol-8,C49H76O4,c
+r5p_c,Alpha-D-Ribose 5-phosphate,C5H9O8P,c
+ru5p__D_c,D-Ribulose 5-phosphate,C5H9O8P,c
+ac_e,Acetate,C2H3O2,e
+acald_c,Acetaldehyde,C2H4O,c
+s7p_c,Sedoheptulose 7-phosphate,C7H13O10P,c
+acald_e,Acetaldehyde,C2H4O,e
+accoa_c,Acetyl-CoA,C23H34N7O17P3S,c
+succ_c,Succinate,C4H4O4,c
+succ_e,Succinate,C4H4O4,e
+succoa_c,Succinyl-CoA,C25H35N7O19P3S,c
+acon_C_c,Cis-Aconitate,C6H3O6,c
+xu5p__D_c,D-Xylulose 5-phosphate,C5H9O8P,c
+actp_c,Acetyl phosphate,C2H3O5P,c
+adp_c,ADP C10H12N5O10P2,C10H12N5O10P2,c
+akg_c,2-Oxoglutarate,C5H4O5,c
+akg_e,2-Oxoglutarate,C5H4O5,e
+amp_c,AMP C10H12N5O7P,C10H12N5O7P,c
+atp_c,ATP C10H12N5O13P3,C10H12N5O13P3,c
+cit_c,Citrate,C6H5O7,c
+co2_c,CO2 CO2,CO2,c
+co2_e,CO2 CO2,CO2,e
+coa_c,Coenzyme A,C21H32N7O16P3S,c
+dhap_c,Dihydroxyacetone phosphate,C3H5O6P,c
+e4p_c,D-Erythrose 4-phosphate,C4H7O7P,c
+etoh_c,Ethanol,C2H6O,c
+etoh_e,Ethanol,C2H6O,e
+f6p_c,D-Fructose 6-phosphate,C6H11O9P,c
+fdp_c,"D-Fructose 1,6-bisphosphate",C6H10O12P2,c
+for_c,Formate,CH1O2,c
+for_e,Formate,CH1O2,e
+fru_e,D-Fructose,C6H12O6,e
+fum_c,Fumarate,C4H2O4,c
+fum_e,Fumarate,C4H2O4,e
+g3p_c,Glyceraldehyde 3-phosphate,C3H5O6P,c
+g6p_c,D-Glucose 6-phosphate,C6H11O9P,c
