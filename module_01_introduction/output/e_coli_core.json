@@ -6661,7 +6661,7 @@
 },
 {
 "id":"O2t",
-"name":"O2 transport  diffusion",
+"name":"O2 transport  diffusion ",
 "metabolites":{
 "o2_c":1.0,
 "o2_e":-1.0
@@ -9333,6 +9333,7 @@
 }
 ],
 "id":"e_coli_core",
+"name":"",
 "compartments":{
 "c":"cytosol",
 "e":"extracellular space"

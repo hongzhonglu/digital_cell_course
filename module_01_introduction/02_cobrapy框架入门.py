@@ -14,6 +14,7 @@
 """Guided tour of the COBRApy core objects using the e_coli_core model."""
 
 # model_loader 会优先在线加载 BiGG 模型，无网络时自动使用本地缓存
+# 在左侧的项目目录中，找到你的文件夹 module_01_introduction。   右键点击 该文件夹 module_01_introduction。   在弹出的菜单中，找到并点击 "Mark Directory as" -> "Sources Root"（将其标记为蓝色）。
 from model_loader import load_ecoli_core
 
 # ----------------------------------------------------------------------

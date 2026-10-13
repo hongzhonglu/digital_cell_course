@@ -23,9 +23,13 @@ from cobra.io import (load_json_model, read_sbml_model, save_json_model,
 from model_loader import load_ecoli_core
 
 # 输出目录：与本脚本同级的 output/ 文件夹，先确保其存在
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_01_introduction/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 print("Output directory:", OUTPUT_DIR)
+
+
+
+
 
 # ----------------------------------------------------------------------
 # 1. 加载模型（在线或本地缓存，见 model_loader.py）

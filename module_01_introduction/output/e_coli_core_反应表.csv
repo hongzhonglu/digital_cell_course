@@ -92,5 +92,5 @@ ME2,Malic enzyme (NADP),mal__L_c + nadp_c --> co2_c + nadph_c + pyr_c,0.0,1000.0
 NADH16,NADH dehydrogenase (ubiquinone-8 & 3 protons),4.0 h_c + nadh_c + q8_c --> 3.0 h_e + nad_c + q8h2_c,0.0,1000.0,b2276 and b2277 and b2278 and b2279 and b2280 and b2281 and b2282 and b2283 and b2284 and b2285 and b2286 and b2287 and b2288
 NADTRHD,NAD transhydrogenase,nad_c + nadph_c --> nadh_c + nadp_c,0.0,1000.0,b3962 or (b1602 and b1603)
 NH4t,Ammonia reversible transport,nh4_e <=> nh4_c,-1000.0,1000.0,s0001 or b0451
-O2t,O2 transport  diffusion,o2_e <=> o2_c,-1000.0,1000.0,s0001
+O2t,O2 transport  diffusion ,o2_e <=> o2_c,-1000.0,1000.0,s0001
 PDH,Pyruvate dehydrogenase,coa_c + nad_c + pyr_c --> accoa_c + co2_c + nadh_c,0.0,1000.0,b0114 and b0115 and b0116
