@@ -1,0 +1,8 @@
+﻿carbon_source,exchange_reaction,max_growth_rate_1h
+Glucose,EX_glc__D_e,0.8739
+Fructose,EX_fru_e,0.8739
+Fumarate,EX_fum_e,0.3707
+Acetate,EX_ac_e,0.1733
+Lactate,EX_lac__D_e,0.3503
+Succinate,EX_succ_e,0.3976
+Pyruvate,EX_pyr_e,0.2912
