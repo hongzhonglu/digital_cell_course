@@ -28,8 +28,11 @@ from cobra.flux_analysis import single_gene_deletion
 from model_loader import load_ecoli_core
 
 # 输出目录
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 输出目录：与本脚本同级的 output/ 文件夹，先确保其存在
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_02_reconstruction/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
+
 plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 

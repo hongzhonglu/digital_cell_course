@@ -27,9 +27,12 @@ import pandas as pd
 
 from model_loader import load_ecoli_core
 
-# 输出目录：与本脚本同级的 output/ 文件夹
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 输出目录：与本脚本同级的 output/ 文件夹，先确保其存在
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_02_reconstruction/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
+
+
 
 # 设置字体与负号显示（图中文字为英文，DejaVu Sans 即可正常显示）
 plt.rcParams["font.sans-serif"] = ["DejaVu Sans"]
