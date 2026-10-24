@@ -149,7 +149,7 @@ for rxn_id, flux in solution.fluxes.items():
 
 # model.summary() 给出摄取/分泌/目标的一览表，适合课堂快速检查
 print("\n===== model.summary() =====")
-toy.summary()
+print(toy.summary())
 
 # ----------------------------------------------------------------------
 # 7. 课堂讨论：把葡萄糖摄取上限改成 5，生长速率如何变化？
