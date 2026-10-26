@@ -18,8 +18,9 @@ import os
 from cobra.io import load_model, load_json_model, read_sbml_model  # 模型加载
 
 # 输出目录（本脚本无绘图，但保留统一约定）
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_03_objective_and_flux_analysis/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
 
 
 # ---------------- 模型加载工具（各模块统一策略，脚本内自带、可独立运行） ----------------
@@ -33,6 +34,7 @@ def load_ecoli_core():
          （cobra 0.32 在线下载可能被 BiGG 301 重定向打断）；
       ③ 两者都失败时抛出带明确提示的错误。
     """
+    __file__ ='module_03_objective_and_flux_analysis'
     here = os.path.dirname(os.path.abspath(__file__))    # 本脚本所在目录
     local_json = os.path.join(here, "e_coli_core.json")  # 本地 JSON 模型
     local_xml = os.path.join(here, "e_coli_core.xml")    # 本地 SBML 模型（备选）

@@ -30,17 +30,24 @@ import matplotlib.pyplot as plt
 from cobra.io import load_model, load_json_model, read_sbml_model  # 模型加载
 from cobra.flux_analysis import pfba, moma
 
-# 图输出目录
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 输出目录（本脚本无绘图，但保留统一约定）
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_03_objective_and_flux_analysis/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
 
 
 # ---------------- 模型加载工具（各模块统一策略，脚本内自带、可独立运行） ----------------
 def load_ecoli_core():
-    """Load e_coli_core: (1) local file in this module directory
-    (e_coli_core.json/xml, current BiGG version whose biomass reaction is
-    BIOMASS_Ecoli_core_w_GAM) -> (2) cobra online download (may be broken by
-    a BiGG 301 redirect) -> (3) raise a clear error."""
+    """Load the E. coli core model e_coli_core.
+
+    查找顺序：
+      ① 本模块目录下的本地模型文件（e_coli_core.json，BiGG 当前版，
+         生物量反应 ID 为 BIOMASS_Ecoli_core_w_GAM）——离线可用，最可靠；
+      ② cobra.io.load_model("e_coli_core") 在线下载
+         （cobra 0.32 在线下载可能被 BiGG 301 重定向打断）；
+      ③ 两者都失败时抛出带明确提示的错误。
+    """
+    __file__ ='module_03_objective_and_flux_analysis'
     here = os.path.dirname(os.path.abspath(__file__))    # 本脚本所在目录
     local_json = os.path.join(here, "e_coli_core.json")  # 本地 JSON 模型
     local_xml = os.path.join(here, "e_coli_core.xml")    # 本地 SBML 模型（备选）
@@ -59,8 +66,9 @@ def load_ecoli_core():
 
 
 def find_biomass_rxn(model):
-    """Auto-detect the biomass reaction, compatible with 'Biomass_Ecoli_core'
-    (textbook version) and 'BIOMASS_Ecoli_core_w_GAM' (current BiGG version)."""
+    """Auto-detect the biomass reaction, compatible with both namings:
+    'Biomass_Ecoli_core' (cobra textbook version) and
+    'BIOMASS_Ecoli_core_w_GAM' (current BiGG version)."""
     for r in model.reactions:
         if "biomass" in r.id.lower():      # id 小写后含 biomass 即为生物量反应
             return r
@@ -69,6 +77,7 @@ def find_biomass_rxn(model):
         if r.objective_coefficient != 0:
             return r
     raise ValueError("No biomass reaction found in the model; check the model file.")
+
 
 
 # ---------------- 加载模型、求野生型参考解 ----------------

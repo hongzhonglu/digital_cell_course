@@ -35,9 +35,10 @@ import matplotlib.pyplot as plt
 from cobra.io import load_model, load_json_model, read_sbml_model  # 模型加载
 from cobra.sampling import OptGPSampler, ACHRSampler               # 两种取样器
 
-# 图输出目录
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 输出目录（本脚本无绘图，但保留统一约定）
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_03_objective_and_flux_analysis/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
 
 # ---------------- 取样参数（在运行时间与样本质量之间折中） ----------------
 N_SAMPLES = 1000   # 取样点数：1000 足够看清分布形状与相关性
@@ -52,6 +53,7 @@ def load_ecoli_core():
     (e_coli_core.json/xml, current BiGG version whose biomass reaction is
     BIOMASS_Ecoli_core_w_GAM) -> (2) cobra online download (may be broken by
     a BiGG 301 redirect) -> (3) raise a clear error."""
+    __file__ = 'module_03_objective_and_flux_analysis'
     here = os.path.dirname(os.path.abspath(__file__))    # 本脚本所在目录
     local_json = os.path.join(here, "e_coli_core.json")  # 本地 JSON 模型
     local_xml = os.path.join(here, "e_coli_core.xml")    # 本地 SBML 模型（备选）

@@ -36,8 +36,10 @@ from cobra.io import load_model, load_json_model, read_sbml_model  # 模型加�
 from cobra.flux_analysis import flux_variability_analysis
 
 # 图输出目录
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+# 输出目录（本脚本无绘图，但保留统一约定）
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_03_objective_and_flux_analysis/output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
 
 # FVA 中允许牺牲的目标比例：0.9 = 保留至少 90% 最优生长率
 # 设为 0.9 而非 1.0 的原因：允许少量次优，能看到敲除株"柔性"如何变化，
@@ -53,6 +55,7 @@ def load_ecoli_core():
     (e_coli_core.json/xml, current BiGG version whose biomass reaction is
     BIOMASS_Ecoli_core_w_GAM) -> (2) cobra online download (may be broken by
     a BiGG 301 redirect) -> (3) raise a clear error."""
+    __file__ = 'module_03_objective_and_flux_analysis'
     here = os.path.dirname(os.path.abspath(__file__))    # 本脚本所在目录
     local_json = os.path.join(here, "e_coli_core.json")  # 本地 JSON 模型
     local_xml = os.path.join(here, "e_coli_core.xml")    # 本地 SBML 模型（备选）
