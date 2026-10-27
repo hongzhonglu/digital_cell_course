@@ -238,18 +238,3 @@ plt.tight_layout()
 png_path = os.path.join(OUTPUT_DIR, "04_FVA_wildtype_vs_dpgi.png")
 plt.savefig(png_path, dpi=150)
 print("Figure saved:", png_path)
-
-# ============================================================
-# 5. 小结
-# ============================================================
-print("=" * 60)
-print("[Summary] FVA vs FBA/pFBA: different questions")
-print("  FBA  -> one optimal value + one (non-unique) flux distribution;")
-print("  pFBA -> one unique, most 'economical' optimal distribution;")
-print("  FVA  -> the FULL range of each reaction across (near-)optimal")
-print("          solutions, i.e. solution uniqueness / flexibility.")
-print("  Wide range = the model cannot pin down that flux (low confidence);")
-print("  zero-width range = the prediction is uniquely determined.")
-print("  After the pgi knockout the solution space shrinks: fewer variable")
-print("  reactions, more fixed/blocked ones (less metabolic flexibility).")
-print("Script 04 finished.")

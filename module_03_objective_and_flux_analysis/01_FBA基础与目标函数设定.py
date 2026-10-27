@@ -148,12 +148,6 @@ print("\nBiomass flux when optimizing acetate:",
       "(shows the objective directly determines the biological meaning of the solution)")
 
 # ============================================================
-# 4. 恢复默认目标并小结
+# 4. 恢复默认目标
 # ============================================================
 model.objective = BIOMASS  # 教学演示后恢复默认（生物量反应）
-print("=" * 60)
-print("[Summary] The three pillars of FBA:")
-print("  (1) steady-state constraint S*v=0; (2) flux bounds lb<=v<=ub; (3) objective c*v.")
-print("  The objective is an ASSUMPTION about what evolution optimized the cell for;")
-print("  that is why objective setting matters so much.")
-print("Script 01 finished.")

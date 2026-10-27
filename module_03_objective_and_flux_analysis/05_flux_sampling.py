@@ -202,16 +202,3 @@ plt.tight_layout()
 png_path = os.path.join(OUTPUT_DIR, "05_flux_sampling_distributions.png")
 plt.savefig(png_path, dpi=150)
 print("Figure saved:", png_path)
-
-# ============================================================
-# 6. 小结
-# ============================================================
-print("=" * 60)
-print("[Summary] Flux sampling vs FVA: complementary views of the solution space")
-print("  FVA      -> independent min/max range per reaction (the 'edges');")
-print("  Sampling -> full flux vectors drawn uniformly from the space:")
-print("              marginal distributions (histograms), joint behaviour")
-print("              (scatter, correlations), and 'typical' vs 'optimal' fluxes.")
-print("  Use FVA for quick range/confidence checks; use sampling when the")
-print("  JOINT distribution of fluxes (trade-offs, couplings) matters.")
-print("Script 05 finished.")

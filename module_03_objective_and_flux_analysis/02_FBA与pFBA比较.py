@@ -86,21 +86,9 @@ print("=" * 60)
 print(f"[1] Wild-type FBA optimal growth rate = {fba_sol.objective_value:.4f} 1/h")
 print(f"    Total flux sum(|v|) of this solution = {fba_sol.fluxes.abs().sum():.2f}")
 
-# ============================================================
-# 2. FVA：检查在最优生长率下，各反应的通量范围
-# ============================================================
-# fraction_of_optimum=1.0 表示"固定目标值为 100% 最优"，
-# 若某反应此时仍有一个宽的 [min, max] 区间，说明它不影响目标值 → 解的简并性
-print("=" * 60)
-print("[2] FVA at 100% optimal growth: top 5 reactions by flux range:")
-fva = flux_variability_analysis(model, fraction_of_optimum=1.0)
-fva["range"] = fva["maximum"] - fva["minimum"]
-print(fva.sort_values("range", ascending=False).head(5).round(4))
-print("  -> SUCDi / FRD7 can take any value in [~5, 1000] without changing growth:")
-print("     they form a succinate<->fumarate futile cycle.")
 
 # ============================================================
-# 3. 构造一个"很差的 FBA 解"：强制循环高通量，生长率不变
+# 2. 构造一个"很差的 FBA 解"：强制循环高通量，生长率不变
 # ============================================================
 print("=" * 60)
 print("[3] Force SUCDi flux = 400 (spinning cycle) and re-run FBA:")
@@ -113,7 +101,7 @@ with model:  # with 语句退出时自动还原模型，适合课堂演示
     print("    with zero growth benefit.")
 
 # ============================================================
-# 4. pFBA：同一最优目标下的最经济解
+# 3. pFBA：同一最优目标下的最经济解
 # ============================================================
 print("=" * 60)
 print("[4] pFBA on the 'forced-cycle' model:")
@@ -127,7 +115,7 @@ with model:
           " (back to the physiological minimum)")
 
 # ============================================================
-# 5. 比较三条解：普通FBA / 强制循环FBA / pFBA
+# 4. 比较三条解：普通FBA / 强制循环FBA / pFBA
 # ============================================================
 labels = ["FBA (plain)", "FBA (forced cycle)", "pFBA"]
 growth = [fba_sol.objective_value, bad_fba.objective_value, growth_pfba]
@@ -149,7 +137,7 @@ print("\nFlux comparison for representative reactions:")
 print(cmp_df)
 
 # ============================================================
-# 6. 画对比条形图（英文标注）
+# 5. 画对比条形图（英文标注）
 # ============================================================
 fig, axes = plt.subplots(1, 2, figsize=(13, 5))
 
@@ -179,10 +167,3 @@ png_path = os.path.join(OUTPUT_DIR, "02_FBA_vs_pFBA_comparison.png")
 plt.savefig(png_path, dpi=150)
 print("=" * 60)
 print("Figure saved:", png_path)
-
-print("[Summary]")
-print("  FBA: only guarantees the optimal objective; the solution is NOT unique")
-print("       (it may contain futile cycles).")
-print("  pFBA: adds a 'minimal total flux' assumption on top of optimality,")
-print("        removing wasted flux and giving a unique, more realistic solution.")
-print("Script 02 finished.")
