@@ -122,15 +122,26 @@ results = {}
 
 # --- 目标 A：最大化生物量（默认，细胞生长）---
 model.objective = BIOMASS  # 使用自动探测到的生物量反应 ID
+model.objective_direction = "minimize" # 或 "maximize"
 sol_a = model.optimize()
 results["Biomass (growth)"] = sol_a.objective_value
+
+
 
 # --- 目标 B：最大化 ATPM（ATP 维持消耗反应，即"最大化ATP浪费"）---
 # ATPM 是一个人工维持反应：ATP + H2O -> ADP + Pi + H，正常解中其值为下界 8.39
 # 把目标设为最大化 ATPM，可演示"目标函数决定解"的原理
 model.objective = "ATPM"
+model.objective_direction = "minimize" # 或 "maximize"
 sol_b = model.optimize()
 results["ATPM (ATP maintenance)"] = sol_b.objective_value
+model.objective.expression
+
+
+model.objective_direction = "maximize"
+sol_b = model.optimize()
+results["ATPM (ATP maintenance)"] = sol_b.objective_value
+
 
 # --- 目标 C：最大化某产物分泌，例如乙酸 EX_ac_e ---
 model.objective = "EX_ac_e"
@@ -146,8 +157,3 @@ for name, val in results.items():
 print("\nBiomass flux when optimizing acetate:",
       round(sol_c.fluxes[BIOMASS], 4),
       "(shows the objective directly determines the biological meaning of the solution)")
-
-# ============================================================
-# 4. 恢复默认目标
-# ============================================================
-model.objective = BIOMASS  # 教学演示后恢复默认（生物量反应）
