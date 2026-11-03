@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>E. coli Core Metabolism — 交互式代谢网络与通量可视化</title>
+<style>
+  :root{--bg:#f7f8fa;--panel:#fff;--ink:#1f2430;--mut:#7a8194;--line:#e3e6ec;
+        --acc:#3b6fe0;--pos:#d64545;--neg:#3b6fe0;--zero:#c3c9d4;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font:13px/1.5 -apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--ink);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--panel);
+         border-bottom:1px solid var(--line);flex-wrap:wrap}
+  header h1{font-size:15px;margin-right:8px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:12px}
+  .btn:hover{border-color:var(--acc);color:var(--acc)}
+  .btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+  main{flex:1;display:flex;min-height:0}
+  #side{width:300px;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:12px}
+  #side h3{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px}
+  #side h3:first-child{margin-top:0}
+  .row{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .row label{color:var(--mut);flex:1}
+  .row input[type=range]{flex:1.2}
+  .row .val{width:44px;text-align:right;font-variant-numeric:tabular-nums}
+  textarea{width:100%;height:110px;border:1px solid var(--line);border-radius:6px;padding:6px;
+           font:11px/1.4 ui-monospace,Consolas,monospace;resize:vertical}
+  input[type=text],select{width:100%;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px}
+  .chip{display:inline-block;border:1px solid var(--line);border-radius:12px;padding:2px 9px;margin:2px;
+        cursor:pointer;font-size:11px;background:#fff;user-select:none}
+  .chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  #stats{font-size:11px;color:var(--mut);white-space:pre-wrap}
+  #fbainfo{font-size:12px;background:#f0f4ff;border:1px solid #d5e0fa;border-radius:6px;padding:8px;margin-top:6px;white-space:pre-wrap}
+  #fbainfo.warn{background:#fff7ed;border-color:#f5d3ae}
+  #wrap{flex:1;position:relative;overflow:hidden}
+  svg{width:100%;height:100%;display:block;cursor:grab}
+  svg:active{cursor:grabbing}
+  #tip{position:absolute;pointer-events:none;background:rgba(20,24,34,.93);color:#fff;border-radius:6px;
+       padding:7px 10px;font-size:11px;max-width:340px;display:none;z-index:9;white-space:pre-wrap}
+  .legend{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);border:1px solid var(--line);
+          border-radius:8px;padding:8px 12px;font-size:11px;z-index:5}
+  .legend .bar{width:150px;height:8px;border-radius:4px;margin:4px 0;
+          background:linear-gradient(90deg,#3b6fe0,#e8ebf2 50%,#d64545)}
+  .mlab{font-size:8.5px;fill:#8a91a3;text-anchor:middle;pointer-events:none}
+  .rlab{font-size:8.5px;fill:#fff;text-anchor:middle;pointer-events:none;font-weight:600}
+  .orpcap{font-size:9.5px;fill:#7a8194;pointer-events:none;font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧬 E. coli 核心代谢网络 · e_coli_core</h1>
+  <button class="btn" id="bAero">好氧 FBA</button>
+  <button class="btn" id="bAna">厌氧 FBA</button>
+  <button class="btn" id="bClear">清空通量</button>
+  <button class="btn primary" id="bFBA">▶ 运行 FBA</button>
+  <button class="btn" onclick="document.getElementById('fmodel').click()">📂 加载模型 JSON</button>
+  <button class="btn" onclick="document.getElementById('fflux').click()">📂 加载通量 CSV</button>
+  <input type="file" id="fmodel" accept=".json" hidden>
+  <input type="file" id="fflux" accept=".csv,.txt,.tsv" hidden>
+</header>
+<main>
+  <div id="side">
+    <h3>培养基 / 约束</h3>
+    <div class="row"><label>葡萄糖摄取</label><input type="range" id="sGlc" min="0" max="20" step="0.5" value="10"><span class="val" id="vGlc">10</span></div>
+    <div class="row"><label>氧气摄取</label><input type="range" id="sO2" min="0" max="1000" step="10" value="1000"><span class="val" id="vO2">1000</span></div>
+    <div class="row"><label>ATPM 维持</label><input type="range" id="sAtpm" min="0" max="20" step="0.1" value="8.39"><span class="val" id="vAtpm">8.39</span></div>
+    <div id="fbainfo">尚未运行 FBA。点击「▶ 运行 FBA」。</div>
+    <h3>显示选项</h3>
+    <div class="row"><label>隐藏通用分子（简化视图）</label><input type="checkbox" id="cCur" checked style="width:16px;height:16px"></div>
+    <div id="stats" style="font-size:11px;color:var(--mut)"></div>
+    <h3>通量数据粘贴</h3>
+    <textarea id="fluxin" placeholder="每行：反应ID [Tab/逗号/空格] 通量值&#10;或 JSON：{&quot;GLCpts&quot;:10,&quot;BIOMASS_Ecoli_core_w_GAM&quot;:0.87}&#10;&#10;可用下方 FBA 预填。"></textarea>
+    <div class="row"><button class="btn primary" id="bApply">应用通量</button><span id="fmsg" style="color:var(--mut);font-size:11px"></span></div>
+    <h3>搜索反应 / 代谢物</h3>
+    <input type="text" id="search" placeholder="如 PFK、pyruvate、bio…">
+    <h3>子系统高亮</h3>
+    <div id="chips"></div>
+    <h3>参考值（课程 README）</h3>
+    <div id="ref" style="font-size:11px;color:var(--mut);white-space:pre-wrap">好氧(葡萄糖10): 生长 0.8739
+厌氧(O₂=0): 生长 0.2117, 分泌 乙酸8.50 / 乙醇8.28 / 甲酸17.8
+ATPM=0 → 0.9166;  ATPM=55 → 0.6366
+ATPM=180 → LP 不可行(致死)</div>
+    <h3>模型信息</h3>
+    <div id="minfo"></div>
+  </div>
+  <div id="wrap">
+    <svg id="map" viewBox="0 0 1800 1520">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/>
+        </marker>
+      </defs>
+      <g id="gEdges"></g><g id="gNodes"></g><g id="gRxns"></g>
+    </svg>
+    <div id="tip"></div>
+    <div class="legend">
+      <b>通量图例</b><br>
+      <div class="bar"></div>
+      <span style="color:var(--neg)">◀ 逆反应 (v&lt;0)</span> ·
+      <span style="color:var(--zero)">无通量</span> ·
+      <span style="color:var(--pos)">正反应 (v&gt;0) ▶</span><br>
+      线宽 ∝ |v| · 滚轮缩放 · 拖拽平移 · 悬停查看详情<br>
+      简化视图已隐藏通用分子（H⁺/H₂O/ATP/ADP/NAD(H)/NADP(H)/Pi/CO₂）<br>
+      FBA 始终使用完整化学计量；加载原始 JSON 可获完全一致结果。
+    </div>
+  </div>
+</main>
+
+<script>
+/* ================= 模型数据（BiGG e_coli_core 重构版：95 反应 / 71 代谢物） ================= */
+const METS={
+"13dpg_c":["3-Phospho-D-glyceroyl phosphate","c"],"2pg_c":["D-Glycerate 2-phosphate","c"],"3pg_c":["3-Phospho-D-glycerate","c"],
+"6pgc_c":["6-Phospho-D-gluconate","c"],"6pgl_c":["6-phospho-D-glucono-1,5-lactone","c"],
+"ac_c":["Acetate","c"],"ac_e":["Acetate","e"],"acald_c":["Acetaldehyde","c"],"acald_e":["Acetaldehyde","e"],
+"accoa_c":["Acetyl-CoA","c"],"actp_c":["Acetyl phosphate","c"],"adp_c":["ADP","c"],"akg_c":["2-Oxoglutarate","c"],"akg_e":["2-Oxoglutarate","e"],
+"amp_c":["AMP","c"],"atp_c":["ATP","c"],"cit_c":["Citrate","c"],"co2_c":["CO2","c"],"co2_e":["CO2","e"],"coa_c":["Coenzyme A","c"],
+"dhap_c":["Dihydroxyacetone phosphate","c"],"e4p_c":["D-Erythrose 4-phosphate","c"],"etoh_c":["Ethanol","c"],"etoh_e":["Ethanol","e"],
+"f6p_c":["D-Fructose 6-phosphate","c"],"fdp_c":["D-Fructose 1,6-bisphosphate","c"],"for_c":["Formate","c"],"for_e":["Formate","e"],
+"fru_e":["D-Fructose","e"],"fum_c":["Fumarate","c"],"fum_e":["Fumarate","e"],"g3p_c":["Glyceraldehyde 3-phosphate","c"],
+"g6p_c":["D-Glucose 6-phosphate","c"],"glc__D_e":["D-Glucose","e"],"gln__L_c":["L-Glutamine","c"],"gln__L_e":["L-Glutamine","e"],
+"glu__L_c":["L-Glutamate","c"],"glu__L_e":["L-Glutamate","e"],"glx_c":["Glyoxylate","c"],"h_c":["H+","c"],"h_e":["H+","e"],
+"h2o_c":["H2O","c"],"h2o_e":["H2O","e"],"icit_c":["Isocitrate","c"],"lac__D_c":["D-Lactate","c"],"lac__D_e":["D-Lactate","e"],
+"mal__L_c":["L-Malate","c"],"mal__L_e":["L-Malate","e"],"nad_c":["NAD","c"],"nadh_c":["NADH","c"],"nadp_c":["NADP","c"],
+"nadph_c":["NADPH","c"],"nh4_c":["Ammonium","c"],"nh4_e":["Ammonium","e"],"o2_c":["O2","c"],"o2_e":["O2","e"],
+"oaa_c":["Oxaloacetate","c"],"pep_c":["Phosphoenolpyruvate","c"],"pi_c":["Phosphate","c"],"pi_e":["Phosphate","e"],
+"pyr_c":["Pyruvate","c"],"pyr_e":["Pyruvate","e"],"q8_c":["Ubiquinone-8","c"],"q8h2_c":["Ubiquinol-8","c"],
+"r5p_c":["alpha-D-Ribose 5-phosphate","c"],"ru5p__D_c":["D-Ribulose 5-phosphate","c"],"s7p_c":["Sedoheptulose 7-phosphate","c"],
+"succ_c":["Succinate","c"],"succ_e":["Succinate","e"],"succoa_c":["Succinyl-CoA","c"],"xu5p__D_c":["D-Xylulose 5-phosphate","c"]};
+const RXNS=[
+["ACALD","Acetaldehyde dehydrogenase (acetylating)","ferment",-1000,1000,"b0351",{acald_c:-1,coa_c:-1,nad_c:-1,accoa_c:1,h_c:1,nadh_c:1}],
+["ACALDt","Acetaldehyde reversible transport","transport",-1000,1000,"",{acald_e:-1,acald_c:1}],
+["ACKr","Acetate kinase","ferment",-1000,1000,"b2296 or b3115",{ac_c:-1,atp_c:-1,actp_c:1,adp_c:1}],
+["ACONTa","Aconitase (half-reaction I)","tca",0,1000,"b0118 or b1276",{cit_c:-1,icit_c:1,h2o_c:1}],
+["ACONTb","Aconitase (half-reaction II)","tca",0,1000,"b0118 or b1276",{icit_c:-1,h2o_c:-1,cit_c:1}],
+["ACt2r","Acetate reversible transport via proton symport","transport",-1000,1000,"",{ac_e:-1,h_e:-1,ac_c:1,h_c:1}],
+["ADHEr","Acetaldehyde dehydrogenase / alcohol dehydrogenase","ferment",-1000,1000,"b1241",{acald_c:-1,h_c:-2,nadh_c:-2,etoh_c:1,nad_c:2}],
+["ADK1","Adenylate kinase","energy",-1000,1000,"b0474",{atp_c:-1,amp_c:-1,adp_c:2}],
+["AKGDH","2-Oxoglutarate dehydrogenase","tca",0,1000,"b0116 or b0726",{akg_c:-1,coa_c:-1,nad_c:-1,succoa_c:1,co2_c:1,nadh_c:1}],
+["AKGt2r","2-Oxoglutarate reversible transport via symport","transport",-1000,1000,"",{akg_e:-1,h_e:-1,akg_c:1,h_c:1}],
+["ALCD2x","Alcohol dehydrogenase (ethanol)","ferment",-1000,1000,"b1478 or b1351",{etoh_c:-1,nad_c:-1,acald_c:1,h_c:1,nadh_c:1}],
+["ATPM","ATP maintenance requirement","energy",8.39,1000,"",{atp_c:-1,h2o_c:-1,adp_c:1,h_c:1,pi_c:1}],
+["ATPS4r","ATP synthase (4 protons)","resp",-1000,1000,"b3736 or b3737 or b3738",{adp_c:-1,pi_c:-1,h_e:-4,atp_c:1,h2o_c:1,h_c:3}],
+["BIOMASS_Ecoli_core_w_GAM","Biomass synthesis objective","biomass",0,1000,"",{"3pg_c":-1.496,accoa_c:-3.7478,atp_c:-59.81,adp_c:59.81,h_c:59.81,pi_c:59.81,e4p_c:-0.361,f6p_c:-0.0709,g3p_c:-0.129,g6p_c:-0.205,glu__L_c:-4.9414,h2o_c:-59.81,nad_c:-3.547,nadh_c:1.4219,nh4_c:-13.0279,oaa_c:-1.7867,pep_c:-0.5191,pyr_c:-2.8328,r5p_c:-0.8977,coa_c:3.7478}],
+["CO2t","CO2 transport via diffusion","transport",-1000,1000,"",{co2_e:-1,co2_c:1}],
+["CS","Citrate synthase","tca",0,1000,"b0720",{oaa_c:-1,accoa_c:-1,h2o_c:-1,cit_c:1,coa_c:1,h_c:1}],
+["CYTBD","Cytochrome bd oxidase","resp",0,1000,"b0972 or b0973",{q8h2_c:-2,o2_c:-1,q8_c:2,h2o_c:2}],
+["D_LACt2","D-lactate transport via proton symport","transport",-1000,1000,"b3603 or b2975",{lac__D_e:-1,h_e:-1,lac__D_c:1,h_c:1}],
+["ENO","Enolase","glycolysis",-1000,1000,"b2779",{"2pg_c":-1,pep_c:1,h2o_c:1}],
+["ETOHt2r","Ethanol reversible transport","transport",-1000,1000,"",{etoh_e:-1,etoh_c:1}],
+["EX_ac_e","Acetate exchange","exchange",0,1000,"",{ac_e:-1}],
+["EX_acald_e","Acetaldehyde exchange","exchange",0,1000,"",{acald_e:-1}],
+["EX_akg_e","2-Oxoglutarate exchange","exchange",0,1000,"",{akg_e:-1}],
+["EX_co2_e","CO2 exchange","exchange",-1000,1000,"",{co2_e:-1}],
+["EX_etoh_e","Ethanol exchange","exchange",0,1000,"",{etoh_e:-1}],
+["EX_for_e","Formate exchange","exchange",0,1000,"",{for_e:-1}],
+["EX_fru_e","D-Fructose exchange","exchange",0,1000,"",{fru_e:-1}],
+["EX_fum_e","Fumarate exchange","exchange",0,1000,"",{fum_e:-1}],
+["EX_glc__D_e","D-Glucose exchange","exchange",-10,1000,"",{glc__D_e:-1}],
+["EX_gln__L_e","L-Glutamine exchange","exchange",0,1000,"",{gln__L_e:-1}],
+["EX_glu__L_e","L-Glutamate exchange","exchange",0,1000,"",{glu__L_e:-1}],
+["EX_h2o_e","H2O exchange","exchange",-1000,1000,"",{h2o_e:-1}],
+["EX_h_e","H+ exchange","exchange",-1000,1000,"",{h_e:-1}],
+["EX_lac__D_e","D-lactate exchange","exchange",0,1000,"",{lac__D_e:-1}],
+["EX_mal__L_e","L-Malate exchange","exchange",0,1000,"",{mal__L_e:-1}],
+["EX_nh4_e","Ammonia exchange","exchange",-1000,1000,"",{nh4_e:-1}],
+["EX_o2_e","O2 exchange","exchange",-1000,1000,"",{o2_e:-1}],
+["EX_pi_e","Phosphate exchange","exchange",-1000,1000,"",{pi_e:-1}],
+["EX_pyr_e","Pyruvate exchange","exchange",0,1000,"",{pyr_e:-1}],
+["EX_succ_e","Succinate exchange","exchange",0,1000,"",{succ_e:-1}],
+["FBA","Fructose-bisphosphate aldolase","glycolysis",-1000,1000,"b1779 or b2097",{fdp_c:-1,dhap_c:1,g3p_c:1}],
+["FBP","Fructose-bisphosphatase","glycolysis",0,1000,"b3925 or b4232",{fdp_c:-1,h2o_c:-1,f6p_c:1,pi_c:1}],
+["FORt","Formate transport via diffusion","transport",-1000,1000,"",{for_e:-1,for_c:1}],
+["FORt2","Formate transport via proton symport","transport",-1000,1000,"b0904 or b2492",{for_e:-1,h_e:-1,for_c:1,h_c:1}],
+["FRD7","Fumarate reductase","tca",-1000,1000,"b0721 and b0722 and b0723 and b0724",{fum_c:-1,q8h2_c:-1,succ_c:1,q8_c:1}],
+["FRUpts2","Fructose transport via PEP:Pyr PTS","transport",0,1000,"b2167 or b2168",{fru_e:-1,pep_c:-1,f6p_c:1,pyr_c:1}],
+["FUM","Fumarase","tca",-1000,1000,"b1612 or b4122 or b1611",{fum_c:-1,h2o_c:-1,mal__L_c:1}],
+["FUMt2_2","Fumarate transport via proton symport (2 H)","transport",0,1000,"b4123 or b4139",{fum_e:-1,h_e:-2,fum_c:1,h_c:2}],
+["G6PDH2r","Glucose 6-phosphate dehydrogenase","ppp",-1000,1000,"b1852",{g6p_c:-1,nadp_c:-1,"6pgl_c":1,h_c:1,nadph_c:1}],
+["GAPD","Glyceraldehyde-3-phosphate dehydrogenase","glycolysis",-1000,1000,"b1779",{g3p_c:-1,nad_c:-1,pi_c:-1,"13dpg_c":1,h_c:1,nadh_c:1}],
+["GLCpts","D-glucose transport via PEP:Pyr PTS","transport",0,1000,"b2417 and b2416 or b1817 and b1818",{glc__D_e:-1,pep_c:-1,g6p_c:1,pyr_c:1}],
+["GLNabc","L-glutamine transport via ABC system","transport",0,1000,"b0810 and b0811 and b0812",{gln__L_e:-1,atp_c:-1,h2o_c:-1,gln__L_c:1,adp_c:1,h_c:1,pi_c:1}],
+["GLNS","Glutamine synthetase","aa",0,1000,"b0870",{atp_c:-1,glu__L_c:-1,nh4_c:-1,adp_c:1,gln__L_c:1,h_c:1,pi_c:1}],
+["GLUDy","Glutamate dehydrogenase (NADP)","aa",-1000,1000,"b1761",{glu__L_c:-1,h2o_c:-1,nadp_c:-1,akg_c:1,h_c:1,nadph_c:1,nh4_c:1}],
+["GLUN","Glutaminase","aa",0,1000,"",{gln__L_c:-1,h2o_c:-1,glu__L_c:1,nh4_c:1}],
+["GLUSy","Glutamate synthase (NADPH)","aa",0,1000,"b3212 and b3213",{akg_c:-1,gln__L_c:-1,h_c:-1,nadph_c:-1,glu__L_c:2,nadp_c:1}],
+["GLUt2r","L glutamate transport via proton symport","transport",-1000,1000,"b4077",{glu__L_e:-1,h_e:-1,glu__L_c:1,h_c:1}],
+["GND","Phosphogluconate dehydrogenase","ppp",-1000,1000,"b2029",{"6pgc_c":-1,nadp_c:-1,co2_c:1,nadph_c:1,ru5p__D_c:1}],
+["H2Ot","H2O transport via diffusion","transport",-1000,1000,"b0875",{h2o_e:-1,h2o_c:1}],
+["ICDHyr","Isocitrate dehydrogenase (NADP)","tca",-1000,1000,"b1136",{icit_c:-1,nadp_c:-1,akg_c:1,co2_c:1,nadph_c:1}],
+["ICL","Isocitrate lyase","glyox",0,1000,"b4015",{icit_c:-1,glx_c:1,succ_c:1}],
+["LDH_D","D-lactate dehydrogenase","ferment",-1000,1000,"b1380 or b2133",{lac__D_c:-1,nad_c:-1,pyr_c:1,h_c:1,nadh_c:1}],
+["MALS","Malate synthase","glyox",0,1000,"b2976 or b4014",{accoa_c:-1,glx_c:-1,h2o_c:-1,mal__L_c:1,coa_c:1,h_c:1}],
+["MALt2_2","Malate transport via proton symport (2 H)","transport",0,1000,"b4123 or b4139",{mal__L_e:-1,h_e:-2,mal__L_c:1,h_c:2}],
+["MDH","Malate dehydrogenase","tca",-1000,1000,"b3236",{mal__L_c:-1,nad_c:-1,oaa_c:1,h_c:1,nadh_c:1}],
+["ME1","Malic enzyme (NAD)","tca",0,1000,"b1479",{mal__L_c:-1,nad_c:-1,pyr_c:1,co2_c:1,nadh_c:1}],
+["ME2","Malic enzyme (NADP)","tca",0,1000,"b2463",{mal__L_c:-1,nadp_c:-1,pyr_c:1,co2_c:1,nadph_c:1}],
+["NADH16","NADH dehydrogenase (ubiquinone-8)","resp",0,1000,"b2276 and b2277 and b2278 and b2279 and b2280 and b2281 and b2282 and b2283 and b2284 and b2285 and b2286 and b2287 and b2288",{nadh_c:-1,q8_c:-1,h_c:-5,nad_c:1,q8h2_c:1,h_e:4}],
+["NADTRHD","NAD transhydrogenase","resp",-1000,1000,"b3962",{nadh_c:-1,nadp_c:-1,nad_c:1,nadph_c:1}],
+["NH4t","Ammonia reversible transport","transport",-1000,1000,"b0451",{nh4_e:-1,nh4_c:1}],
+["O2t","O2 transport diffusion","transport",-1000,1000,"",{o2_e:-1,o2_c:1}],
+["PDH","Pyruvate dehydrogenase","glycolysis",0,1000,"b0114 and b0115 and b3255",{pyr_c:-1,coa_c:-1,nad_c:-1,accoa_c:1,co2_c:1,nadh_c:1}],
+["PFK","Phosphofructokinase","glycolysis",0,1000,"b3916 or b1723",{atp_c:-1,f6p_c:-1,fdp_c:1,adp_c:1,h_c:1}],
+["PFL","Pyruvate formate lyase","ferment",0,1000,"b0902 and b0903 or b0902 and b3952",{coa_c:-1,pyr_c:-1,accoa_c:1,for_c:1}],
+["PGI","Glucose-6-phosphate isomerase","glycolysis",-1000,1000,"b4025",{g6p_c:-1,f6p_c:1}],
+["PGK","Phosphoglycerate kinase","glycolysis",-1000,1000,"b2926",{"3pg_c":-1,atp_c:-1,"13dpg_c":1,adp_c:1}],
+["PGL","6-phosphogluconolactonase","ppp",0,1000,"b0767",{"6pgl_c":-1,h2o_c:-1,"6pgc_c":1,h_c:1}],
+["PGM","Phosphoglycerate mutase","glycolysis",-1000,1000,"b0755 or b3612 or b4395",{"2pg_c":-1,"3pg_c":1}],
+["PIt2r","Phosphate reversible transport via symport","transport",-1000,1000,"b3493 or b2987",{pi_e:-1,h_e:-1,pi_c:1,h_c:1}],
+["PPC","Phosphoenolpyruvate carboxylase","glycolysis",0,1000,"b3956",{co2_c:-1,h2o_c:-1,pep_c:-1,oaa_c:1,h_c:1,pi_c:1}],
+["PPCK","Phosphoenolpyruvate carboxykinase","glycolysis",0,1000,"b3403",{atp_c:-1,oaa_c:-1,adp_c:1,co2_c:1,pep_c:1}],
+["PPS","Phosphoenolpyruvate synthase","glycolysis",0,1000,"b1702",{atp_c:-1,h2o_c:-1,pyr_c:-1,amp_c:1,h_c:2,pep_c:1,pi_c:1}],
+["PTAr","Phosphotransacetylase","ferment",-1000,1000,"b2297 or b2458",{accoa_c:-1,pi_c:-1,actp_c:1,coa_c:1}],
+["PYK","Pyruvate kinase","glycolysis",0,1000,"b1854 or b1676",{adp_c:-1,pep_c:-1,atp_c:1,pyr_c:1}],
+["PYRt2","Pyruvate transport in via proton symport","transport",-1000,1000,"",{pyr_e:-1,h_e:-1,pyr_c:1,h_c:1}],
+["RPE","Ribulose 5-phosphate 3-epimerase","ppp",-1000,1000,"b3386 or b4301",{ru5p__D_c:-1,xu5p__D_c:1}],
+["RPI","Ribose-5-phosphate isomerase","ppp",-1000,1000,"b2914 or b4090",{r5p_c:-1,ru5p__D_c:1}],
+["SUCCt2_2","Succinate transport via proton symport (2 H)","transport",0,1000,"b4123 or b4139",{succ_e:-1,h_e:-2,succ_c:1,h_c:2}],
+["SUCCt3","Succinate transport out via proton antiport","transport",0,1000,"",{succ_c:-1,h_e:-2,succ_e:1,h_c:2}],
+["SUCDi","Succinate dehydrogenase (irreversible)","tca",0,1000,"b0721 and b0722 and b0723 and b0724",{succ_c:-1,q8_c:-1,fum_c:1,q8h2_c:1}],
+["SUCOAS","Succinyl-CoA synthetase (ADP-forming)","tca",-1000,1000,"b0728 and b0729",{succoa_c:-1,adp_c:-1,pi_c:-1,succ_c:1,atp_c:1,coa_c:1}],
+["TALA","Transaldolase","ppp",-1000,1000,"b0008 or b2464",{g3p_c:-1,s7p_c:-1,e4p_c:1,f6p_c:1}],
+["THD2","NAD(P) transhydrogenase","resp",0,1000,"b1602 and b1603",{nadh_c:-1,nadp_c:-1,h_c:-2,nad_c:1,nadph_c:1,h_e:2}],
+["TKT1","Transketolase I","ppp",-1000,1000,"b2935 or b2465",{r5p_c:-1,xu5p__D_c:-1,g3p_c:1,s7p_c:1}],
+["TKT2","Transketolase II","ppp",-1000,1000,"b2935 or b2465",{e4p_c:-1,xu5p__D_c:-1,f6p_c:1,g3p_c:1}],
+["TPI","Triose-phosphate isomerase","glycolysis",-1000,1000,"b3919",{dhap_c:-1,g3p_c:1}]];
+
+/* 通用分子（简化视图时隐藏） */
+const CURRENCY=new Set(["h_c","h_e","h2o_c","h2o_e","atp_c","adp_c","amp_c","nad_c","nadh_c","nadp_c","nadph_c","pi_c","pi_e","co2_c","co2_e"]);
+let hideCur=true;
+const visMet=id=>!hideCur||!CURRENCY.has(id);
+
+/* 布局坐标 */
+const MET_XY={o2_e:[70,60],glc__D_e:[70,160],fru_e:[70,260],nh4_e:[70,360],gln__L_e:[70,460],glu__L_e:[70,560],
+akg_e:[70,660],mal__L_e:[70,760],fum_e:[70,860],succ_e:[70,960],pyr_e:[70,1060],
+ac_e:[1730,760],acald_e:[1730,860],etoh_e:[1730,960],lac__D_e:[1730,1060],for_e:[1730,1160],
+o2_c:[1660,180],g6p:[400,180],f6p:[560,180],fdp:[720,180],dhap:[830,100],g3p:[880,180],"13dpg":[1040,180],
+"3pg":[1200,180],"2pg":[1360,180],pep:[1520,180],pyr_c:[1690,180],
+"6pgl":[400,340],"6pgc":[560,340],ru5p__D:[720,340],xu5p__D:[880,340],r5p:[640,470],s7p:[1040,470],e4p:[1200,470],
+accoa_c:[1690,340],cit_c:[1520,470],icit_c:[1320,470],akg_c:[1120,470],glx_c:[1120,620],succoa_c:[900,660],
+succ_c:[1120,800],fum_c:[1320,800],mal__L_c:[1520,800],oaa_c:[1690,660],gln__L_c:[430,560],glu__L_c:[620,640],
+nh4_c:[230,360],actp_c:[560,1000],ac_c:[760,1000],acald_c:[1000,1000],etoh_c:[1240,1000],lac__D_c:[1480,1000],
+for_c:[1690,1060],q8_c:[1180,340],q8h2_c:[1360,340]};
+const RXN_XY={EX_o2_e:[130,34],EX_glc__D_e:[130,134],EX_fru_e:[130,234],EX_nh4_e:[130,334],EX_gln__L_e:[130,434],
+EX_glu__L_e:[130,534],EX_akg_e:[130,634],EX_mal__L_e:[130,734],EX_fum_e:[130,834],EX_succ_e:[130,934],
+EX_pyr_e:[130,1034],EX_ac_e:[1670,734],EX_acald_e:[1670,834],EX_etoh_e:[1670,934],EX_lac__D_e:[1670,1034],
+EX_for_e:[1670,1134],O2t:[150,180],NH4t:[150,360],GLCpts:[250,170],FRUpts2:[250,260],GLNabc:[230,480],
+GLUt2r:[230,560],AKGt2r:[230,660],MALt2_2:[230,760],FUMt2_2:[230,860],SUCCt2_2:[230,960],SUCCt3:[340,960],
+PYRt2:[340,1090],D_LACt2:[1610,1030],ETOHt2r:[1560,930],ACALDt:[1560,830],ACt2r:[1560,730],
+FORt2:[1580,1220],FORt:[1580,1160],PGI:[480,180],PFK:[640,180],FBA:[800,180],TPI:[855,140],GAPD:[960,180],
+PGK:[1120,180],PGM:[1280,180],ENO:[1440,180],PYK:[1600,180],PPS:[1600,105],PPC:[1740,120],PDH:[1690,260],
+PFL:[1560,240],G6PDH2r:[350,260],PGL:[480,340],GND:[640,340],RPE:[800,300],RPI:[680,410],TKT1:[900,240],
+TKT2:[1030,410],TALA:[1120,330],CS:[1610,430],ACONTa:[1420,405],ACONTb:[1420,540],ICDHyr:[1220,430],
+ICL:[1190,560],MALS:[1330,660],AKGDH:[1010,565],SUCOAS:[1010,730],SUCDi:[1220,800],FRD7:[1120,730],
+FUM:[1420,800],MDH:[1610,730],ME1:[1750,700],ME2:[1750,760],NADH16:[1060,250],CYTBD:[1490,230],
+GLNS:[430,470],GLUDy:[830,560],GLUSy:[880,620],GLUN:[530,620],PTAr:[470,930],ACKr:[660,930],ACALD:[900,930],
+ADHEr:[1120,930],ALCD2x:[1120,1030],LDH_D:[1590,930],BIOMASS_Ecoli_core_w_GAM:[700,240]};
+
+const SUBN={glycolysis:"糖酵解/糖异生",ppp:"磷酸戊糖途径",tca:"TCA循环",glyox:"乙醛酸循环",
+ferment:"发酵产物",resp:"呼吸链/氧化磷酸化",energy:"能量代谢(ATP)",aa:"氨基酸代谢",
+transport:"跨膜转运",exchange:"边界交换",biomass:"生物量合成"};
+const SUBC={glycolysis:"#4c9f70",ppp:"#c9a227",tca:"#3b6fe0",glyox:"#2aa1a1",ferment:"#c05a9e",
+resp:"#7b5cd6",energy:"#e08b3b",aa:"#4ca0c9",transport:"#8a91a3",exchange:"#b04a4a",biomass:"#111827"};
+
+let model={mets:JSON.parse(JSON.stringify(METS)),rxns:RXNS.map(r=>({id:r[0],name:r[1],sub:r[2],lb:r[3],ub:r[4],gpr:r[5],m:r[6]}))};
+let flux={};
+let rScale=1;
+const $=id=>document.getElementById(id);
+const svg=$("map"),NS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function metXY(id){const p=MET_XY[id];if(p)return p;
+  let h=0;for(const k in id)h=(h*31+id.charCodeAt(k))>>>0;
+  if(!MET_XY[id])MET_XY[id]=[400+(h%7)*190,1200+((h>>3)%4)*60];return MET_XY[id]}
+function rxnXY(r){const p=RXN_XY[r.id];if(p)return p;
+  const ks=Object.keys(r.m).filter(k=>MET_XY[k]);
+  if(ks.length){const sx=ks.reduce((s,k)=>s+MET_XY[k][0],0)/ks.length,sy=ks.reduce((s,k)=>s+MET_XY[k][1],0)/ks.length;
+    if(!RXN_XY[r.id])RXN_XY[r.id]=[Math.min(1750,Math.max(60,sx)),Math.min(1480,Math.max(30,sy))];}
+  else if(!RXN_XY[r.id])RXN_XY[r.id]=[300,1400];
+  return RXN_XY[r.id]}
+function eqn(r){const subs=[],prods=[];for(const k in r.m){if(!visMet(k))continue;
+  (r.m[k]<0?subs:prods).push((Math.abs(r.m[k])!==1?Math.abs(r.m[k])+" ":"")+k)}
+  if(!subs.length&&!prods.length)return"(仅含通用分子)";
+  return subs.join(" + ")+(r.lb<0?" ⇌ ":" → ")+prods.join(" + ")}
+
+let edgeEls={},rxnEls={},metEls={};
+function render(){
+  for(const g of["gEdges","gNodes","gRxns"])$(g).innerHTML="";
+  edgeEls={};rxnEls={};metEls={};
+  const orphans=[];
+  for(const r of model.rxns){const[px,py]=rxnXY(r);const set=[];
+    for(const k in r.m){if(!visMet(k))continue;const[mx,my]=metXY(k);const sub=r.m[k]<0;
+      const x1=sub?mx:px,y1=sub?my:py,x2=sub?px:mx,y2=sub?py:my,dx=(x2-x1)*0.45;
+      const p=el("path",{d:`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`,fill:"none",stroke:"#c9cfda","stroke-width":1.4,"marker-end":"url(#arr)"});
+      p.dataset.rxn=r.id;set.push(p);$("gEdges").appendChild(p);}
+    if(set.length===0&&hideCur)orphans.push(r);
+    edgeEls[r.id]=set;}
+  // 孤儿反应（仅含通用分子）→ 顶部条带
+  if(orphans.length){const cap=el("text",{x:400,y:48,class:"orpcap"},$("gRxns"));
+    cap.textContent="能量与辅因子反应（通用分子已隐藏）";
+    orphans.forEach((r,i)=>{const x=430+(i%6)*185,y=72+Math.floor(i/6)*48;
+      RXN_XY[r.id+"#strip"]=[x,y];});}
+  for(const id in model.mets){if(!visMet(id))continue;const[nm,comp]=model.mets[id];const[x,y]=metXY(id);
+    const g=el("g",{},$("gNodes"));
+    if(comp==="e")el("rect",{x:x-8,y:y-8,width:16,height:16,rx:3,fill:"#fff",stroke:"#5a6172","stroke-width":1.4},g);
+    else el("circle",{cx:x,cy:y,r:9,fill:"#e8edf9",stroke:"#3b6fe0","stroke-width":1.4},g);
+    el("text",{x:x,y:y+17,class:"mlab"},g).textContent=id.replace(/_([ce])$/,"");
+    g.addEventListener("mousemove",e=>tip(e,`<b>${id}</b> ${nm} [${comp==="e"?"胞外":"胞内"}]`));
+    g.addEventListener("mouseleave",hideTip);metEls[id]=g;}
+  for(const r of model.rxns){const strip=hideCur&&RXN_XY[r.id+"#strip"];
+    const[x,y]=strip||rxnXY(r);const g=el("g",{},$("gRxns"));
+    const w=Math.max(30,r.id.length*5.2+10);
+    const rect=el("rect",{x:x-w/2,y:y-9,width:w,height:18,rx:9,fill:"#fff",stroke:SUBC[r.sub]||"#888","stroke-width":1.6},g);
+    const t=el("text",{x:x,y:y+3,class:"rlab",fill:"#1f2430"},g);t.textContent=r.id;
+    g.addEventListener("mousemove",e=>tip(e,`<b>${r.id}</b> ${r.name}\n${eqn(r)}\n边界: [${r.lb}, ${r.ub}]  通量: ${flux[r.id]!=null?flux[r.id].toFixed(3):"—"}\nGPR: ${r.gpr||"—"}  子系统: ${SUBN[r.sub]||r.sub}`));
+    g.addEventListener("mouseleave",hideTip);
+    g.addEventListener("click",()=>{const q=$("search");q.value=r.id;q.dispatchEvent(new Event("input"));});
+    rxnEls[r.id]={g,rect,t,x,y,w,strip:!!strip};}
+  const nVis=Object.keys(model.mets).filter(visMet).length;
+  $("minfo").textContent=`${model.rxns.length} 反应 · ${Object.keys(model.mets).length} 代谢物(含区室)
+显示 ${nVis} 个节点${hideCur?`（已隐藏 ${Object.keys(model.mets).length-nVis} 个通用分子）`:""}
+数据: BiGG e_coli_core (Orth et al. 2010)`;
+  applyFlux();
+}
+function color(v){const t=Math.min(1,Math.abs(v)/rScale);
+  return v>0?`rgba(214,69,69,${0.25+0.75*t})`:v<0?`rgba(59,111,224,${0.25+0.75*t})`:"#c3c9d4"}
+function applyFlux(){
+  const vals=Object.values(flux).filter(v=>v!=null&&isFinite(v));
+  const mx=vals.length?Math.max(...vals.map(Math.abs)):0;rScale=mx>0?mx:1;
+  for(const r of model.rxns){const v=flux[r.id],E=edgeEls[r.id]||[];
+    const w=v==null||!isFinite(v)?1.4:1.4+8.6*Math.min(1,Math.abs(v)/rScale);
+    for(const e of E){e.setAttribute("stroke",color(v));e.setAttribute("stroke-width",w);}
+    const R=rxnEls[r.id];if(R){R.rect.setAttribute("fill",v==null||!isFinite(v)?"#fff":color(v));
+      R.rect.setAttribute("stroke-width",v!=null&&Math.abs(v)>1e-9?2.6:1.6);
+      R.t.textContent=v!=null&&isFinite(v)?`${r.id} ${(+v).toFixed(2)}`:r.id;}}
+  const q=$("search").value.trim().toLowerCase();
+  for(const r of model.rxns){const R=rxnEls[r.id];if(!R)continue;
+    const hit=!q||r.id.toLowerCase().includes(q)||r.name.toLowerCase().includes(q);
+    R.g.style.opacity=(q&&!hit)?0.15:1;}
+}
+const tipEl=$("tip");
+function tip(e,h){tipEl.innerHTML=h;tipEl.style.display="block";
+  const w=$("wrap").getBoundingClientRect();
+  tipEl.style.left=Math.min(e.clientX-w.left+14,w.width-350)+"px";
+  tipEl.style.top=(e.clientY-w.top+10)+"px"}
+function hideTip(){tipEl.style.display="none"}
+let vb={x:0,y:0,w:1800,h:1520};
+function setVB(){svg.setAttribute("viewBox",`${vb.x} ${vb.y} ${vb.w} ${vb.h}`)}
+$("wrap").addEventListener("wheel",e=>{e.preventDefault();const f=e.deltaY>0?1.12:1/1.12;
+  const r=svg.getBoundingClientRect(),mx=vb.x+(e.clientX-r.left)/r.width*vb.w,my=vb.y+(e.clientY-r.top)/r.height*vb.h;
+  vb.w*=f;vb.h*=f;vb.x=mx-(e.clientX-r.left)/r.width*vb.w;vb.y=my-(e.clientY-r.top)/r.height*vb.h;setVB()},{passive:false});
+let drag=null;
+svg.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,vx:vb.x,vy:vb.y};svg.setPointerCapture(e.pointerId)});
+svg.addEventListener("pointermove",e=>{if(!drag)return;const r=svg.getBoundingClientRect();
+  vb.x=drag.vx-(e.clientX-drag.x)/r.width*vb.w;vb.y=drag.vy-(e.clientY-drag.y)/r.height*vb.h;setVB()});
+svg.addEventListener("pointerup",()=>drag=null);
+
+/* ================= 单纯形法 FBA（完整化学计量） ================= */
+function fba(objId){
+  const rx=model.rxns,n=rx.length,mIds=Object.keys(model.mets),m=mIds.length;
+  const S=Array.from({length:m},()=>new Float64Array(n));
+  rx.forEach((r,j)=>{for(const k in r.m)S[mIds.indexOf(k)][j]=r.m[k]});
+  const lb=rx.map(r=>r.lb),ub=rx.map(r=>r.ub);
+  const b=new Float64Array(m);for(let i=0;i<m;i++){let s=0;for(let j=0;j<n;j++)s+=S[i][j]*lb[j];b[i]=-s}
+  const u=ub.map((v,j)=>v-lb[j]);
+  const R=m+n,X=n,Sl=n,Ar=m,C=X+Sl+Ar,EPS=1e-9,TOL=1e-7;
+  const T=Array.from({length:R+1},()=>new Float64Array(C+1));
+  const basis=new Int32Array(R);
+  for(let i=0;i<m;i++){for(let j=0;j<n;j++)T[i][j]=S[i][j];T[i][X+Sl+i]=1;T[i][C]=b[i];
+    if(T[i][C]<0)for(let c=0;c<=C;c++)T[i][c]=-T[i][c];basis[i]=X+Sl+i;}
+  for(let j=0;j<n;j++){T[m+j][j]=1;T[m+j][X+j]=1;T[m+j][C]=u[j];basis[m+j]=X+j;}
+  const cost=new Float64Array(C);
+  function initCost(){T[R].fill(0);for(let c=0;c<C;c++)T[R][c]=cost[c];
+    for(let i=0;i<R;i++){const bi=basis[i];if(cost[bi]!==0)for(let c=0;c<=C;c++)T[R][c]-=cost[bi]*T[i][c]}}
+  function pivot(col,row){const p=T[row][col];
+    for(let i=0;i<=R;i++){if(i===row)continue;const f=T[i][col];if(f===0)continue;for(let c=0;c<=C;c++)T[i][c]-=f*T[row][c];}
+    for(let c=0;c<=C;c++)T[row][c]/=p;basis[row]=col;}
+  function simplex(){while(true){let en=-1;
+      for(let c=0;c<C;c++)if(T[R][c]<-EPS){en=c;break}
+      if(en<0)return true;let row=-1,best=Infinity;
+      for(let i=0;i<R;i++)if(T[i][en]>EPS){const rr=T[i][C]/T[i][en];
+        if(rr<best-1e-12||Math.abs(rr-best)<=1e-12&&(row<0||basis[i]<basis[row])){best=rr;row=i}}
+      if(row<0)return false;pivot(en,row);}}
+  cost.fill(0);for(let i=0;i<m;i++)cost[X+Sl+i]=1;initCost();
+  if(!simplex()||T[R][C]<-TOL)return{status:"infeasible"};
+  for(let i=0;i<m;i++)if(basis[i]>=X+Sl){let c=-1;
+    for(let j=0;j<X+Sl;j++)if(Math.abs(T[i][j])>TOL){c=j;break}
+    if(c>=0)pivot(c,i);}
+  cost.fill(0);const oi=rx.findIndex(r=>r.id===objId);
+  for(let j=0;j<n;j++)cost[j]=-(rx[j].id===objId?1:0);initCost();
+  if(!simplex())return{status:"unbounded"};
+  const v=new Float64Array(n);
+  for(let i=0;i<R;i++)if(basis[i]<X)v[basis[i]]=T[i][C];
+  const out={};rx.forEach((r,j)=>out[r.id]=v[j]+lb[j]);
+  return{status:"ok",flux:out,obj:v[oi]+lb[oi]};
+}
+
+/* ================= 交互 ================= */
+function setMedium(glc,o2,atpm){$("sGlc").value=glc;$("sO2").value=o2;$("sAtpm").value=atpm;
+  $("vGlc").textContent=glc;$("vO2").textContent=o2;$("vAtpm").textContent=atpm;
+  const g=model.rxns.find(r=>r.id==="EX_glc__D_e"),ox=model.rxns.find(r=>r.id==="EX_o2_e"),at=model.rxns.find(r=>r.id==="ATPM");
+  if(g)g.lb=-glc;if(ox)ox.lb=-o2;if(at)at.lb=atpm;}
+[["sGlc","vGlc"],["sO2","vO2"],["sAtpm","vAtpm"]].forEach(([s,v])=>$(s).addEventListener("input",()=>{$(v).textContent=$(s).value}));
+function runFBA(msg){const res=fba("BIOMASS_Ecoli_core_w_GAM");const box=$("fbainfo");
+  if(res.status!=="ok"){box.className="warn";box.textContent=(msg||"FBA")+" → LP 不可行/无解（检查约束，如 ATPM 过高会致死）";return null}
+  flux=res.flux;$("fluxin").value=model.rxns.map(r=>r.id+"\t"+(+res.flux[r.id].toFixed(4))).join("\n");
+  const g=res.flux["BIOMASS_Ecoli_core_w_GAM"]||0;
+  const ac=res.flux["EX_ac_e"]||0,et=res.flux["EX_etoh_e"]||0,fo=res.flux["EX_for_e"]||0;
+  box.className="";box.textContent=`${msg||"FBA"} ✅\n生长率 μ = ${g.toFixed(4)} h⁻¹\n分泌: 乙酸 ${ac.toFixed(2)} | 乙醇 ${et.toFixed(2)} | 甲酸 ${fo.toFixed(2)}\n(参考: 好氧0.8739 / 厌氧0.2117, ac8.50·etoh8.28·for17.8)`;
+  applyFlux();return res}
+$("bFBA").onclick=()=>{setMedium(+$("sGlc").value,+$("sO2").value,+$("sAtpm").value);runFBA(`FBA @ 葡萄糖${$("sGlc").value}, O₂${$("sO2").value}, ATPM${$("sAtpm").value}`)};
+$("bAero").onclick=()=>{setMedium(10,1000,8.39);runFBA("好氧 (glc 10, O₂ 1000)")};
+$("bAna").onclick=()=>{setMedium(10,0,8.39);runFBA("厌氧 (glc 10, O₂ 0)")};
+$("bClear").onclick=()=>{flux={};$("fluxin").value="";$("fbainfo").textContent="已清空通量。";applyFlux()};
+$("bApply").onclick=()=>{parseAndApply($("fluxin").value)};
+function parseAndApply(txt){const f={};let bad=0,ok=0;txt=txt.trim();
+  if(!txt){$("fmsg").textContent="空输入";return}
+  if(txt.startsWith("{")){try{const o=JSON.parse(txt);for(const k in o)if(model.rxns.some(r=>r.id===k)){f[k]=+o[k];ok++}else bad++}catch(e){$("fmsg").textContent="JSON 解析失败";return}}
+  else for(const line of txt.split(/\n+/)){const p=line.trim().split(/[\t,;\s]+/).filter(Boolean);if(p.length<2)continue;
+    if(model.rxns.some(r=>r.id===p[0])){f[p[0]]=parseFloat(p[1]);isNaN(f[p[0]])?bad++:ok++}else bad++}
+  flux=f;applyFlux();$("fmsg").textContent=`已匹配 ${ok} 条${bad?`，未识别 ${bad} 条`:""}`;}
+$("fmodel").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;
+  const rd=new FileReader();rd.onload=()=>{try{
+    const j=JSON.parse(rd.result);const mets={},rx=[];
+    (j.metabolites||[]).forEach(m=>mets[m.id]=[m.name||m.id,m.compartment||"c"]);
+    (j.reactions||[]).forEach(r=>rx.push({id:r.id,name:r.name||r.id,sub:r.id.startsWith("EX_")?"exchange":(/biomass/i.test(r.id)?"biomass":"transport"),
+      lb:r.lower_bound??-1000,ub:r.upper_bound??1000,gpr:r.gene_reaction_rule||"",m:r.metabolites||{}}));
+    if(!rx.length)throw"未找到 reactions";
+    model={mets,rxns:rx};flux={};$("fbainfo").textContent="已加载模型文件："+file.name+"（子系统按规则推断，未知节点自动布局）";
+    render();}catch(err){alert("模型解析失败: "+err)}};rd.readAsText(file);});
+$("fflux").addEventListener("change",e=>{const file=e.target.files[0];if(!file)return;
+  const rd=new FileReader();rd.onload=()=>{$("fluxin").value=rd.result;parseAndApply(rd.result)};rd.readAsText(file);});
+$("cCur").addEventListener("change",e=>{hideCur=e.target.checked;
+  for(const k in RXN_XY)if(k.endsWith("#strip"))delete RXN_XY[k];
+  render();});
+(function(){const box=$("chips");
+  function draw(){box.innerHTML="";const all=Object.keys(SUBN).filter(s=>model.rxns.some(r=>r.sub===s));
+    [["全部",null]].concat(all.map(s=>[SUBN[s],s])).forEach(([nm,s])=>{const c=document.createElement("span");c.className="chip";
+      c.textContent=nm;c.style.borderColor=s?SUBC[s]:"";c.onclick=()=>{
+        const on=c.classList.contains("on");box.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));
+        if(!on)c.classList.add("on");
+        for(const r of model.rxns){const dim=s&&r.sub!==s;
+          (edgeEls[r.id]||[]).forEach(e=>e.style.opacity=dim?0.08:1);
+          if(rxnEls[r.id])rxnEls[r.id].g.style.opacity=dim?0.08:1;}
+        for(const id in metEls){let keep=!s;for(const r of model.rxns)if(r.sub===s&&r.m[id])keep=true;
+          metEls[id].style.opacity=keep?1:0.12;}};box.appendChild(c);});}
+  window._redrawChips=draw;draw();})();
+$("search").addEventListener("input",applyFlux);
+render();setMedium(10,1000,8.39);runFBA("好氧默认 (glc 10, O₂ 1000)");
+</script>
+</body>
+</html>

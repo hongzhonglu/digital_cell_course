@@ -67,6 +67,7 @@ print("EX_nh4_e bounds:", model.reactions.EX_nh4_e.bounds)
 
 wt_growth = model.optimize().objective_value
 print(f"\nMax growth rate on the default medium = {wt_growth:.4f} 1/h")
+sol=model.optimize();  sol.fluxes.to_csv(OUTPUT_DIR + "/flux.csv")
 
 # ============================================================
 # 2. 逐个改变葡萄糖摄取下界（碳源限制）
