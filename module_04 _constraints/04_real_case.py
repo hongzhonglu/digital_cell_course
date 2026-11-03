@@ -14,6 +14,12 @@ import pandas as pd
 from cobra import Model, Reaction, Metabolite
 
 
+# 图输出目录
+OUTPUT_DIR = os.path.join(os.getcwd(), "module_04 _constraints/output")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+print("Output directory:", OUTPUT_DIR)
+
+
 # test for the GEM_new
 DIR = os.path.join(os.getcwd(), "module_04 _constraints/data")
 local_xml = os.path.join(DIR, "iKS1317.xml")
@@ -225,9 +231,21 @@ sns.distplot(s4['CS'])
 fig.legend(labels=['M145, feeding','HY01, feeding'])
 plt.show()
 
+plt.tight_layout()
+png_path = os.path.join(OUTPUT_DIR, "04_CS.png")
+plt.savefig(png_path, dpi=150)
+print("\nFigure saved:", png_path)
+
+
+
 fig = plt.figure(figsize=(4,3))
 sns.distplot(s3['ACONTa'])
 sns.distplot(s4['ACONTa'])
 fig.legend(labels=['M145, feeding','HY01, feeding'])
 plt.show()
+
+plt.tight_layout()
+png_path = os.path.join(OUTPUT_DIR, "04_ACONTa.png")
+plt.savefig(png_path, dpi=150)
+print("\nFigure saved:", png_path)
 

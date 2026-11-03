@@ -190,6 +190,8 @@ axes[2].legend()
 plt.tight_layout()
 png_path = os.path.join(OUTPUT_DIR, "01_medium_and_secretion_comparison.png")
 plt.savefig(png_path, dpi=150)
+
+
 print("=" * 60)
 print("Figure saved:", png_path)
 print("[Summary] Medium = lower bounds of exchange reactions; tightening")

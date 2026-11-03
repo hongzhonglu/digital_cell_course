@@ -163,6 +163,8 @@ axes[1].legend(lines, [l.get_label() for l in lines], loc="center right")
 plt.tight_layout()
 png_path = os.path.join(OUTPUT_DIR, "02_bound_constraint_effects.png")
 plt.savefig(png_path, dpi=150)
+
+
 print("=" * 60)
 print("Figure saved:", png_path)
 print("[Summary] Bounds = constraints: tightening an upper/lower bound only")
