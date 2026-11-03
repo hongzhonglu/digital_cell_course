@@ -15,7 +15,9 @@ from cobra import Model, Reaction, Metabolite
 
 
 # test for the GEM_new
-GEM_new = read_sbml_model('./data/iKS1317.xml')
+DIR = os.path.join(os.getcwd(), "module_04 _constraints/data")
+local_xml = os.path.join(DIR, "iKS1317.xml")
+GEM_new = read_sbml_model(local_xml)
 model1 = GEM_new.copy()
 model = model1
 
@@ -51,7 +53,7 @@ s = optgp.sample(1000)
 
 # just for the analysis
 # here we fist fix the biomass and maximize the production
-model = read_sbml_model('./data/iKS1317.xml')
+model = read_sbml_model(local_xml)
 # Add the reactions for TAG degrade
 model.add_metabolites(Metabolite('tag160_e'))
 # TAG degradation
