@@ -1,0 +1,42 @@
+﻿exchange_id,metabolite,growth_rate,usable
+EX_ala__L_e,L-Alanine,0.2447,True
+EX_pyr_e,Pyruvate,0.2159,True
+EX_tma_e,Trimethylamine,0.1676,True
+EX_dma_e,Dimethylamine,0.1,True
+EX_meoh_e,Methanol,0.0591,True
+EX_dms_e,Dimethyl sulfide,0.0591,True
+EX_ac_e,Acetate,0.0531,True
+EX_mma_e,Methylamine,0.0323,True
+EX_gly_e,Glycine,0.0,False
+EX_etha_e,Ethanolamine,0.0,False
+EX_fol_e,Folate,0.0,False
+EX_gcald_e,Glycolaldehyde,0.0,False
+EX_glcn_e,D-Gluconate,0.0,False
+EX_glu__L_e,L-Glutamate,0.0,False
+EX_thm_e,Thiamin,0.0,False
+EX_glyald_e,D-Glyceraldehyde,0.0,False
+EX_glyb_e,Glycine betaine,0.0,False
+EX_ile__L_e,L-Isoleucine,0.0,False
+EX_ind3ac_e,Indole 3 acetate C10H8NO2,0.0,False
+EX_leu__L_e,L-Leucine,0.0,False
+EX_lys__L_e,L-Lysine,0.0,False
+EX_pac_e,Phenylacetic acid,0.0,False
+EX_glyc_e,Glycerol,0.0,False
+EX_cit_e,Citrate,0.0,False
+EX_cys__L_e,L-Cysteine,0.0,False
+EX_4hphac_e,4-Hydroxyphenylacetate,0.0,False
+EX_pnto__R_e,(R)-Pantothenate,0.0,False
+EX_pro__L_e,L-Proline,0.0,False
+EX_unknown_rbfdeg_e,Unknown riboflavin degradation product,0.0,False
+EX_ribflv_e,Riboflavin C17H20N4O6,0.0,False
+EX_urea_e,Urea CH4N2O,0.0,False
+EX_val__L_e,L-Valine,0.0,False
+EX_actn__R_e, R  Acetoin C4H8O2,0.0,False
+EX_ch4s_e,Methanethiol CH4S,0.0,False
+EX_alac__S_e,(S)-2-Acetolactate,0.0,False
+EX_btn_e,Biotin,0.0,False
+EX_cbi_e,Cobinamide,0.0,False
+EX_cbl1_e,Cob(I)alamin,0.0,False
+EX_cbl1hbi_e,Cob(I)alamin-HBI,0.0,False
+EX_ch4_e,Methane,0.0,False
+EX_unknown_cbl1deg_e,Unknown degradation product of cbl1 for adocbl-HBI synthesis,0.0,False
