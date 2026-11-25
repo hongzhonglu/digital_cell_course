@@ -7,6 +7,8 @@
       <sourceFolder url="file://$MODULE_DIR$/module_03_objective_and_flux_analysis" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/module_04 _constraints" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/module_05_GEM_reconstruction_for_non_model_organism" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/module_06_omics_constrained_GEM" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/module_06_omics_constrained_GEM/yeast_sc_gimme" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

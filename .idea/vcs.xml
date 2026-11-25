@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/module_06_omics_constrained_GEM/scFEA" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/module_06_omics_constrained_GEM/troppo" vcs="Git" />
   </component>
 </project>
